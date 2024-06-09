@@ -1,10 +1,7 @@
 // API endpoint URL
 string endpoint = "http://api.farmsense.net/v1/moonphases/?d=";
 float updateInterval = 900;
-float age = 0.0;
-string phase = "";
-string moonNames = "";
-
+integer touched = FALSE;
 
 requestPhase(){
     integer currentTime=llGetUnixTime();
@@ -19,8 +16,8 @@ default
         llSetTimerEvent(updateInterval);
     }
     touch_start(integer n){
+        touched = TRUE;
         requestPhase();
-        llWhisper(PUBLIC_CHANNEL,"\nAge : "+(string)age+"\nPhase : "+phase+"\nMoon Name : "+moonNames);
     }
     http_response(key request_id, integer status, list metadata, string body)
     {
@@ -30,14 +27,18 @@ default
             list resp = llJson2List(body);
             string entry = llList2String(resp,0);
             list info = llJson2List(entry);
-            age = llList2Float(info,11);
+            float age = llList2Float(info,11);
             string moonName = llList2String(info,7);
             list moonNameList = llJson2List(moonName);
-            moonNames = llDumpList2String(moonNameList,", ");
-            phase = llList2String(info,13);
+            string moonNames = llDumpList2String(moonNameList,", ");
+            string phase = llList2String(info,13);
             integer index = llList2Integer(info,11);
             llSetTexture("moon_"+(string)index,ALL_SIDES);
             llSetText(phase,<1,1,1>,1);
+            if(touched){
+                 llWhisper(PUBLIC_CHANNEL,"\nAge : "+(string)age+"\nPhase : "+phase+"\nMoon Name : "+moonNames);
+touched = FALSE;
+            }
         }
         else
         {
